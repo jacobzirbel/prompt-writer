@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Writer</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Agent definitions (sets global var AGENTS) -->
+  <script src="./agents.js"></script>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    function countTokens(text) {
+      return Math.ceil((text || '').length / 4);
+    }
+
+    function App() {
+      const [agentType, setAgentType]           = useState(AGENTS[0].agentType);
+      const [values, setValues]                 = useState({});
+      const [activeSwitches, setActiveSwitches] = useState(new Set());
+      const [copied, setCopied]                 = useState(false);
+
+      const currentAgent = AGENTS.find(a => a.agentType === agentType);
+
+      // Visible fields: alwaysShown + reveals from active switches, deduped
+      const visibleFields = useMemo(() => {
+        if (!currentAgent) return [];
+        const seen   = new Set();
+        const fields = [];
+        currentAgent.alwaysShown.forEach(f => {
+          if (!seen.has(f.id)) { seen.add(f.id); fields.push(f); }
+        });
+        (currentAgent.switches || []).forEach(sw => {
+          if (activeSwitches.has(sw.id)) {
+            sw.reveals.forEach(f => {
+              if (!seen.has(f.id)) { seen.add(f.id); fields.push(f); }
+            });
+          }
+        });
+        return fields;
+      }, [currentAgent, activeSwitches]);
+
+      // Assembled prompt: only non-empty fields
+      const assembledPrompt = useMemo(() => {
+        const parts = [];
+        visibleFields.forEach(f => {
+          const v = (values[f.id] || '').trim();
+          if (v) parts.push(`## ${f.id}\n${v}`);
+        });
+        return parts.join('\n\n');
+      }, [values, visibleFields]);
+
+      const totalTokens = countTokens(assembledPrompt);
+
+      function onAgentChange(e) {
+        setAgentType(e.target.value);
+        setActiveSwitches(new Set());
+      }
+
+      function toggleSwitch(id) {
+        setActiveSwitches(prev => {
+          const next = new Set(prev);
+          if (next.has(id)) next.delete(id); else next.add(id);
+          return next;
+        });
+      }
+
+      function onFieldChange(id, val) {
+        setValues(v => ({ ...v, [id]: val }));
+      }
+
+      async function handleCopy() {
+        if (!assembledPrompt.trim()) return;
+        await navigator.clipboard.writeText(assembledPrompt).catch(() => {});
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }
+
+      return (
+        <div id="app">
+
+          {/* Agent selector */}
+          <div id="agent-row">
+            <select
+              className="agent-select"
+              value={agentType}
+              onChange={onAgentChange}
+            >
+              {AGENTS.map(a => (
+                <option key={a.agentType} value={a.agentType}>{a.label}</option>
+              ))}
+            </select>
+            <span className="agent-desc">{currentAgent?.desc || ''}</span>
+          </div>
+
+          {/* Switches */}
+          {currentAgent?.switches?.length > 0 && (
+            <div id="switches-row">
+              {currentAgent.switches.map(sw => {
+                const isOn = activeSwitches.has(sw.id);
+                return (
+                  <button
+                    key={sw.id}
+                    className={'switch-btn' + (isOn ? ' active' : '')}
+                    title={sw.hint}
+                    onClick={() => toggleSwitch(sw.id)}
+                  >
+                    <span>{sw.emoji}</span>
+                    <span className="switch-label">{sw.label}</span>
+                    <span className="switch-count">· {sw.reveals.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Section fields */}
+          <div id="fields">
+            {visibleFields.map(f => (
+              <div key={f.id} className="field">
+                <div className="field-label">## {f.id}</div>
+                <div className="field-hint">{f.hint}</div>
+                <textarea
+                  rows={3}
+                  placeholder={f.hint}
+                  value={values[f.id] || ''}
+                  onChange={e => onFieldChange(f.id, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div id="footer">
+            <div id="token-count">
+              <span className="label">this prompt · </span>
+              <span>{totalTokens.toLocaleString()}</span>
+              <span className="label"> tok</span>
+            </div>
+            <div className="spacer" />
+            <button
+              className={'btn btn-primary' + (copied ? ' btn-copied' : '')}
+              onClick={handleCopy}
+              disabled={!assembledPrompt.trim()}
+            >
+              {copied ? 'Copied!' : 'Copy ▶'}
+            </button>
+          </div>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

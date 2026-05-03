@@ -1,0 +1,217 @@
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Design tokens ── */
+:root {
+  --bg:       #0d0f14;
+  --surface:  #14171f;
+  --panel:    #1a1e28;
+  --border:   #252a38;
+  --border2:  #2e3447;
+  --text:     #d4daf0;
+  --muted:    #6b748f;
+  --accent:   #6366f1;
+  --accent-h: #818cf8;
+  --green:    #10b981;
+  --purple:   #a78bfa;
+  --red:      #ef4444;
+  --radius:   6px;
+  --mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ── Base ── */
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+/* Scrolling root — centers and constrains #app */
+#root {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 36px 20px 80px;
+}
+#root::-webkit-scrollbar { width: 6px; }
+#root::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── App container ── */
+#app {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Agent row ── */
+#agent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agent-select {
+  appearance: none;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 7px 32px 7px 12px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b748f' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  outline: none;
+  transition: border-color .15s;
+}
+.agent-select:focus { border-color: var(--accent); }
+
+.agent-desc {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── Switches ── */
+#switches-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  font-family: inherit;
+  line-height: 1.6;
+}
+.switch-btn:hover { border-color: var(--accent); color: var(--text); }
+.switch-btn.active {
+  border-color: var(--accent);
+  background: rgba(99,102,241,.15);
+  color: var(--accent-h);
+}
+
+.switch-label { font-weight: 500; }
+.switch-count {
+  color: var(--muted);
+  font-size: 10px;
+  font-family: var(--mono);
+  margin-left: 1px;
+}
+.switch-btn.active .switch-count { color: var(--accent-h); opacity: .7; }
+
+/* ── Section fields ── */
+#fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--accent-h);
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 1px;
+}
+
+.field textarea {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 72px;
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+}
+.field textarea:focus { border-color: var(--accent); }
+.field textarea::placeholder { color: var(--muted); opacity: .6; }
+
+/* ── Footer — sticky at the bottom of the scroll area ── */
+#footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0 2px;
+  border-top: 1px solid var(--border);
+  position: sticky;
+  bottom: 0;
+  /* cover content scrolling behind it */
+  background: linear-gradient(to bottom, transparent, var(--bg) 18px);
+  margin-top: 4px;
+}
+
+#token-count {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--green);
+}
+#token-count .label {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.spacer { flex: 1; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background .15s, opacity .15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-h); }
+
+/* Flash state when copied */
+.btn-copied {
+  background: var(--green) !important;
+  color: #fff !important;
+}
